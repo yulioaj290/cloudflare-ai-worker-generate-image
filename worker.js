@@ -39,7 +39,7 @@ export default {
           prompt: prompt,
           image: [...imageData], 
           strength: 0.6,
-          num_steps: 25
+          num_steps: 20 // Max allowed 20
         }
       );
 
