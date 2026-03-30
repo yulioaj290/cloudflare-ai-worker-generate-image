@@ -1,0 +1,13 @@
+{
+    "name": "@yulioaj290/cloudflare-ai-worker-generate-image",
+    "description": "Cloudflare AI Worker to generate images",
+    "version": "0.1.0",
+    "main": "./worker.js",
+    "author": {
+        "name": "Yulio Aleman Jimenez",
+        "url": "https://github.com/yulioaj290"
+    },
+    "repository": {
+        "url": "https://github.com/yulioaj290/cloudflare-ai-worker-generate-image"
+    }
+}
