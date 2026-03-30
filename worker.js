@@ -22,6 +22,8 @@ export default {
       const formData = await request.formData();
       const prompt = formData.get("prompt");
       const imageFile = formData.get("image");
+      const width = formData.get("width") || 1080;    // fallback reccommended width for Instagram/Facebook
+      const height = formData.get("height") || 1350;  // fallback reccommended height for Instagram/Facebook
 
       if (!prompt || !imageFile) {
         return json({ error: "Field missing: prompt or image" }, 400);
@@ -34,12 +36,15 @@ export default {
       // 6. Execution of the AI model
       // Note: We are using Uint8Array directly for better perfomance
       const response = await env.AI.run(
-        "@cf/stabilityai/stable-diffusion-xl-base-1.0",
+        "@cf/runwayml/stable-diffusion-v1-5-img2img",
         {
           prompt: prompt,
-          image: [...imageData], 
-          strength: 0.6,
-          num_steps: 20 // Max allowed 20
+          image: [...imageData], // The model expects an array of numbers (bytes)
+          width: width,
+          height: height,
+          strength: 0.5,         // Transformation level (0.4-0.6 ideal for e-commerce)
+          num_steps: 20,         // 20 is the maximum allowed by CLoudflare for this model
+          guidance_factor: 7.5   // Controls how closely the generated image should adhere to the prompt
         }
       );
 
