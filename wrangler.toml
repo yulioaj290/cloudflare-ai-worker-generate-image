@@ -1,0 +1,11 @@
+name = "images"
+main = "worker.js"
+compatibility_date = "2026-03-01"
+
+[ai]
+binding = "AI"
+
+# Si usas variables de entorno como API_KEY en el código
+# puedes definirlas aquí o en el dashboard de Cloudflare
+[vars]
+# API_KEY = "tu_llave_aqui" (Mejor configurarla como Secret en el Dashboard)
