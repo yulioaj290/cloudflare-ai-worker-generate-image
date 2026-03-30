@@ -1,42 +1,62 @@
 export default {
   async fetch(request, env) {
+    // 1. CORS handling
     if (request.method === "OPTIONS") {
-      return new Response(null, { headers: cors() })
-    };
+      return new Response(null, { headers: cors() });
+    }
 
+    // 2. API KEY validation
     const auth = request.headers.get("Authorization");
     if (auth !== `Bearer ${env.API_KEY}`) {
-      return json({ error: "Unauthorized" }, 401)
-    };
+      return json({ error: "Unauthorized" }, 401);
+    }
 
     try {
-      // Usaremos FormData para recibir la imagen y el prompt desde n8n
-      const formData = await request.formData();
-      const prompt = formData.get("prompt");
-      const imageFile = formData.get("image"); // El archivo binario de Amazon
-
-      if (!prompt || !imageFile) {
-        return json({ error: "Prompt and image are required for showcase mode" }, 400);
+      // 3. Content-Type (Debug) verification
+      const contentType = request.headers.get("content-type") || "";
+      if (!contentType.includes("multipart/form-data")) {
+        return json({ error: "The system was expecting a multipart/form-data", received: contentType }, 400);
       }
 
-      const imageArrayBuffer = await imageFile.arrayBuffer();
+      // 4. Form Data parsing
+      const formData = await request.formData();
+      const prompt = formData.get("prompt");
+      const imageFile = formData.get("image");
 
-      // Ejecutamos SDXL en modo Image-to-Image
+      if (!prompt || !imageFile) {
+        return json({ error: "Field missing: prompt or image" }, 400);
+      }
+
+      // 5. Convert to Uint8Array (Optimized format for Cloudflare AI)
+      const imageArrayBuffer = await imageFile.arrayBuffer();
+      const imageData = new Uint8Array(imageArrayBuffer);
+
+      // 6. Execution of the AI model
+      // Note: We are using Uint8Array directly for better perfomance
       const response = await env.AI.run(
         "@cf/stabilityai/stable-diffusion-xl-base-1.0",
         {
           prompt: prompt,
-          image: [...new Uint8Array(imageArrayBuffer)], // Convertimos a array de bytes
-          strength: 0.6, // 0.6 permite cambiar el fondo manteniendo la forma del producto
-          num_steps: 30
+          image: [...imageData], 
+          strength: 0.6,
+          num_steps: 25
         }
       );
 
       return new Response(response, {
-        headers: { ...cors(), "content-type": "image/jpeg" },
+        headers: {
+          ...cors(),
+          "content-type": "image/jpeg",
+        },
       });
+
     } catch (err) {
-      return json({ error: "Generation failed", details: String(err) }, 500);
+      // Capturing the real error to send it on the response
+      return json({ 
+        error: "Generation failed", 
+        details: err.message,
+        stack: err.stack 
+      }, 500);
     }
   },
 };
